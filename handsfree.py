@@ -34,4 +34,5 @@ class handsfree:
         manager.HangupAll()
         
     def dial_number(self, number):
-        pass        
+        vcm = dbus.Interface(self.bus.get_object("org.ofono", self.modems[0][0]), "org.ofono.VoiceCallManager")
+        vcm.Dial(number, "default")     

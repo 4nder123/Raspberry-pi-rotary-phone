@@ -16,6 +16,9 @@ if __name__ == '__main__':
             hf.anwser_calls()
         elif ac == "2":
             hf.hangup()
+        elif ac == "3":
+            ac = int(input("nr:" ))
+            hf.dial(ac)
     GLib.MainLoop().run()
     
 

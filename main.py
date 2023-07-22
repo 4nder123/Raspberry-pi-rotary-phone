@@ -3,8 +3,6 @@ from routing import audio_route
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 
-
-
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)
     hf = handsfree()
@@ -17,8 +15,8 @@ if __name__ == '__main__':
         elif ac == "2":
             hf.hangup()
         elif ac == "3":
-            ac = int(input("nr:" ))
-            hf.dial(ac)
+            ac = input("nr:" )
+            hf.dial_number(ac)
     GLib.MainLoop().run()
     
 

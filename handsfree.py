@@ -1,5 +1,6 @@
 import sys
 import dbus
+from routing import audio_route
 
 class handsfree:
     
@@ -7,6 +8,7 @@ class handsfree:
         self.bus = dbus.SystemBus()
         manager = dbus.Interface(self.bus.get_object('org.ofono', '/'),'org.ofono.Manager')
         self.modems = manager.GetModems()
+        self.route = audio_route()
         
     def anwser_calls(self):
         for path, properties in self.modems:
@@ -38,3 +40,34 @@ class handsfree:
 
     def list_calls(self):
         pass
+    
+    def poll(self):
+        self.modems = self.manager.GetModems()  # Update list in case of new modems from newly-paired devices
+
+        for modem, modem_props in self.modems:
+            if "org.ofono.VoiceCallManager" not in modem_props["Interfaces"]:
+                continue
+
+            mgr = dbus.Interface(self.bus.get_object('org.ofono', modem), 'org.ofono.VoiceCallManager')
+
+            calls = mgr.GetCalls()
+
+            # Due to polling we aren't able to catch when calls end up disconnecting, so we just overwrite the list
+            # each time.
+            currentcalls = {}
+            for path, properties in calls:
+                state = properties['State']
+                name = properties['Name']
+                line_ident = properties['LineIdentification']
+
+                if state != "disconnected":
+                    currentcalls[line_ident] = {
+                        "path": path,
+                        "state": state,
+                        "name": name,
+                        "modem": modem
+                    }
+
+            self.calls = currentcalls
+            if len(self.calls) > 0:
+                self.route.on_call_start()

@@ -12,13 +12,13 @@ class audio_route:
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
         self.device_id = "88:9F:6F:22:BE:55"
-        """
+        
         self.bus = dbus.SystemBus()
         self.bus.add_signal_receiver(
             self._on_bluealsa_pcm_added,
             bus_name='org.bluealsa',
             signal_name='PCMAdded'
-        )"""
+        )
         
     def _on_bluealsa_pcm_added(self, path, properties):
         self.set_volumes()

@@ -4,6 +4,7 @@ import dbus
 class handsfree:
     
     def __init__(self):
+        DBusGMainLoop(set_as_default=True)
         self.bus = dbus.SystemBus()
         manager = dbus.Interface(self.bus.get_object('org.ofono', '/'),'org.ofono.Manager')
         self.modems = manager.GetModems()

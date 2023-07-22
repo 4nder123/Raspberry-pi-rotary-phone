@@ -1,3 +1,5 @@
+from subprocess import Popen, PIPE
+
 class audio_route:
     def __init__(self):
         self.aplay_sco = None

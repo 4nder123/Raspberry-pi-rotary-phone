@@ -1,5 +1,3 @@
-from subprocess import Popen, PIPE
-import subprocess
 import sys
 import dbus
 

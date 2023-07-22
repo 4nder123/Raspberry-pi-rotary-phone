@@ -7,7 +7,6 @@ class handsfree:
         self.bus = dbus.SystemBus()
         manager = dbus.Interface(self.bus.get_object('org.ofono', '/'),'org.ofono.Manager')
         self.modems = manager.GetModems()
-        self.route = audio_route()
         
     def anwser_calls(self):
         for path, properties in self.modems:

@@ -1,7 +1,8 @@
 # INSTALLATION
 - Install Bluealsa
 ```
-git clone git@github.com:raspberrypi-ui/bluealsa.git && cd bluealsa/
+git clone https://github.com/Arkq/bluez-alsa
+cd bluez-alsa
 autoreconf --install
 mkdir build && cd build
 ../configure --enable-ofono --enable-debug --enable-aplay

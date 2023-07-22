@@ -3,8 +3,7 @@ from routing import audio_route
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 
-def poll():
-        route = audio_route()
+def poll(route):
         while True:
             modems = manager.GetModems()  # Update list in case of new modems from newly-paired devices
             for modem, modem_props in modems:
@@ -36,7 +35,8 @@ def poll():
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)
     hf = handsfree()
-    thread = Thread(target=poll, daemon=True)
+    route = audio_route()
+    thread = Thread(target=poll, args=(route), daemon=True)
     thread.start()
     while True:
         ac = input("Action:" )

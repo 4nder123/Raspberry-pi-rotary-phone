@@ -6,7 +6,6 @@ import dbus
 
 class audio_route:
     def __init__(self):
-        DBusGMainLoop(set_as_default=True)
         self.aplay_sco = None
         self.aplay_mic = None
         self.arec_mic = None
@@ -16,13 +15,15 @@ class audio_route:
         self.device_id = "88:9F:6F:22:BE:55"
         
     def run(self):
+        DBusGMainLoop(set_as_default=True)
         self.bus = dbus.SystemBus()
         self.bus.add_signal_receiver(
             self._on_bluealsa_pcm_added,
             bus_name='org.bluealsa',
             signal_name='PCMAdded'
         )
-        GLib.MainLoop().run()
+        loop = GLib.MainLoop()
+        loop.run()
         
     def _on_bluealsa_pcm_added(self, path, properties):
         self.set_volumes()

@@ -1,12 +1,10 @@
 from subprocess import Popen, PIPE
-from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import subprocess
 import dbus
 
 class audio_route:
     def __init__(self):
-        DBusGMainLoop(set_as_default=True)
         self.aplay_sco = None
         self.aplay_mic = None
         self.arec_mic = None
@@ -51,5 +49,5 @@ class audio_route:
             self.arec_mic = None
 
         # Pipe Arecord output to Aplay to send over the SCO link
-        self.arec_mic = Popen([self.arecord, "-D plughw:1 -f S16_LE -c 1 -r 16000 mic"], stdout=PIPE, shell=False)
-        self.aplay_mic = Popen([self.aplay, "-D bluealsa:SRV=org.bluealsa,DEV=88:9F:6F:22:BE:55,PROFILE=sco mic"], stdout=PIPE, stdin=self.arec_mic.stdout, shell=False)
+        self.arec_mic = Popen([self.arecord, "-D plughw:1 -f S16_LE -c 1 -r 16000 mic"], stdout=PIPE, shell=True)
+        self.aplay_mic = Popen([self.aplay, "-D bluealsa:SRV=org.bluealsa,DEV=88:9F:6F:22:BE:55,PROFILE=sco mic"], stdout=PIPE, stdin=self.arec_mic.stdout, shell=True)

@@ -14,9 +14,9 @@ class audio_route:
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
         self.device_id = "88:9F:6F:22:BE:55"
-        self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'), 'org.ofono.Manager')
         
         self.bus = dbus.SystemBus()
+        self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'), 'org.ofono.Manager')
         self.bus.add_signal_receiver(
             self._on_bluealsa_pcm_added,
             bus_name='org.bluealsa',
@@ -33,7 +33,7 @@ class audio_route:
             for modem, modem_props in modems:
                 if "org.ofono.VoiceCallManager" not in modem_props["Interfaces"]:
                     continue
-                mgr = dbus.Interface(bus.get_object('org.ofono', modem), 'org.ofono.VoiceCallManager')
+                mgr = dbus.Interface(self.bus.get_object('org.ofono', modem), 'org.ofono.VoiceCallManager')
                 calls = mgr.GetCalls()
                 # Due to polling we aren't able to catch when calls end up disconnecting, so we just overwrite the list
                 # each time.

@@ -46,7 +46,7 @@ class handsfree:
     def list_calls(self):
         pass
     
-    def on_call_start():
+    def on_call_start(self):
         if self.aplay_sco is None:
             self.aplay_sco = Popen([self.bluealsa_aplay_exec, "--profile-sco"],
                                    stdout=PIPE, stderr=PIPE, shell=False)

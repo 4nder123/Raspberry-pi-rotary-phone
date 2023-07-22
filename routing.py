@@ -36,7 +36,7 @@ class audio_route:
 
     def on_call_start(self):
         if self.aplay_sco is None:
-            self.aplay_sco = Popen([self.bluealsa_aplay +"--profile-sco"], stdout=PIPE, stderr=PIPE, shell=False)
+            self.aplay_sco = Popen([self.bluealsa_aplay,"--profile-sco"], stdout=PIPE, stderr=PIPE, shell=False)
 
         # Terminate aplay and arecord if already running
         if self.aplay_mic is not None:
@@ -50,9 +50,8 @@ class audio_route:
             self.arec_mic = None
     
         # Pipe Arecord output to Aplay to send over the SCO link
-        self.arec_mic = Popen([self.arecord+" -D plughw:1 -f S16_LE -c 1 -r 16000 mic.wav"], stdout=PIPE, shell=True)
-        sleep(0.1)
-        self.aplay_mic = Popen([self.aplay+" -D bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco mic.wav"], stdout=PIPE, shell=True)
+        self.arec_mic = Popen([self.arecord,"-D","plughw:1", "-f", "S16_LE", "-c", "1", "-r", "16000", "mic.wav"], stdout=PIPE, shell=False)
+        self.aplay_mic = Popen([self.aplay,"-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "mic.wav"], stdout=PIPE, stdin=self.arec_mic.stdout, shell=False)
         
      def on_call_stop(self):
         if self.aplay_mic is not None:

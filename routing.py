@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE
+from gi.repository import GLib
 import subprocess
 import dbus
 
@@ -11,12 +12,15 @@ class audio_route:
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
         self.device_id = "88:9F:6F:22:BE:55"
+        
+    def run(self):
         self.bus = dbus.SystemBus()
         self.bus.add_signal_receiver(
             self._on_bluealsa_pcm_added,
             bus_name='org.bluealsa',
             signal_name='PCMAdded'
         )
+        GLib.MainLoop().run()
 
     def _on_bluealsa_pcm_added(self, path, properties):
         self.set_volumes()
@@ -24,7 +28,7 @@ class audio_route:
     def set_volumes(self):
         # Set the SCO volumes
         self._set_bluealsa_volume("SCO playback", 6, "100")
-        self._set_bluealsa_volume("SCO capture", 4, "100)
+        self._set_bluealsa_volume("SCO capture", 4, "100")
         
     def _set_bluealsa_volume(self, type, numid, value):
         if subprocess.run(['amixer', '-D', 'bluealsa', 'cset', 'numid=' + str(numid), value + "%"], capture_output=True).returncode != 0:

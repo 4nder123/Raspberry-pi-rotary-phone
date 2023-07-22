@@ -1,5 +1,6 @@
 from subprocess import Popen, PIPE
 from dbus.mainloop.glib import DBusGMainLoop
+from gi.repository import GLib
 import subprocess
 import dbus
 
@@ -14,12 +15,14 @@ class audio_route:
         self.arecord = "/usr/bin/arecord"
         self.device_id = "88:9F:6F:22:BE:55"
         
+    def run(self):
         self.bus = dbus.SystemBus()
         self.bus.add_signal_receiver(
             self._on_bluealsa_pcm_added,
             bus_name='org.bluealsa',
             signal_name='PCMAdded'
         )
+        GLib.MainLoop().run()
         
     def _on_bluealsa_pcm_added(self, path, properties):
         self.set_volumes()

@@ -1,4 +1,4 @@
-from .handsfree import handsfree
+from handsfree import handsfree
 
 hf = handsfree()
 if input() == "anwser":

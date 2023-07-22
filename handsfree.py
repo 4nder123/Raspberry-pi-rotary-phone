@@ -65,11 +65,7 @@ class handsfree:
 
         device_id = "88:9F:6F:22:BE:55"
         # Pipe Arecord output to Aplay to send over the SCO link
-        self.arec_mic = Popen([self.arecord_exec, "-D", self.audio_manager.config['audio']['arecord-device'],
-                               "-f", self.audio_manager.config['audio']['arecord-format'],
-                               "-c", self.audio_manager.config['audio']['arecord-channels'],
-                               "-r", self.audio_manager.config['audio']['arecord-sample-rate'], "mic.wav"],
+        self.arec_mic = Popen([self.arecord_exec, "-D plughw:1 -f S16_LE -c 1 -r 16000 mic.wav"],
                               stdout=PIPE, shell=False)
-        self.aplay_mic = Popen([self.aplay_exec, "-D",
-                                "bluealsa:SRV=org.bluealsa,DEV=" + device_id + ",PROFILE=sco", "mic.wav"],
+        self.aplay_mic = Popen([self.aplay_exec, "-D bluealsa:SRV=org.bluealsa,DEV=88:9F:6F:22:BE:55,PROFILE=sco mic.wav"],
                                stdout=PIPE, stdin=self.arec_mic.stdout, shell=False)

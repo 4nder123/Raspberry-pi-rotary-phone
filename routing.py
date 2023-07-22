@@ -57,17 +57,14 @@ class audio_route:
         if self.aplay_mic is not None:
             self.aplay_mic.terminate()
             self.aplay_mic.wait()
-
             self.aplay_mic = None
 
         if self.arec_mic is not None:
             self.arec_mic.terminate()
             self.arec_mic.kill()
-
             self.arec_mic = None
 
         if self.aplay_sco is not None:
             self.aplay_sco.terminate()
             self.aplay_sco.wait()
-
             self.aplay_sco = None

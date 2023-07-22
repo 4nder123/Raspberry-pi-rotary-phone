@@ -1,6 +1,9 @@
 from handsfree import handsfree
+from routing import audio_route
 
 hf = handsfree()
-if input() == "anwser":
+route = audio_route()
+
+if input() == "1":
     hf.anwser_calls()
-    hf.on_call_start()
+    route.on_call_start()

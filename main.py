@@ -10,7 +10,9 @@ if __name__ == '__main__':
     if input("Action: ") == "1":
         hf.anwser_calls()
         route.on_call_start()
-    
+    if input("Action: ") == "2":
+        hf.anwser_hangup()
+        route.on_call_stop()
     GLib.MainLoop().run()
     
 

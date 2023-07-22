@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE
+from threading import Thread
 from gi.repository import GLib
 from time import sleep
 import subprocess
@@ -21,6 +22,39 @@ class audio_route:
             signal_name='PCMAdded'
         )
         
+    def run():
+        thread = Thread(target=self.poll, daemon=True)
+        thread.start()
+        
+    def pol():
+        while True:
+            modems = manager.GetModems()  # Update list in case of new modems from newly-paired devices
+            for modem, modem_props in modems:
+                if "org.ofono.VoiceCallManager" not in modem_props["Interfaces"]:
+                    continue
+                mgr = dbus.Interface(bus.get_object('org.ofono', modem), 'org.ofono.VoiceCallManager')
+                calls = mgr.GetCalls()
+                # Due to polling we aren't able to catch when calls end up disconnecting, so we just overwrite the list
+                # each time.
+                currentcalls = {}
+                for path, properties in calls:
+                    state = properties['State']
+                    name = properties['Name']
+                    line_ident = properties['LineIdentification']
+
+                    if state != "disconnected":
+                        currentcalls[line_ident] = {
+                            "path": path,
+                            "state": state,
+                            "name": name,
+                            "modem": modem
+                        }
+
+                calls = currentcalls
+                if len(calls) > 0:
+                    self.on_call_start()
+            sleep(1)
+    
     def _on_bluealsa_pcm_added(self, path, properties):
         self.set_volumes()
 

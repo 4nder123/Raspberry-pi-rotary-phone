@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE
+import subprocess
 import sys
 import dbus
 
@@ -47,6 +48,8 @@ class handsfree:
         pass
     
     def on_call_start(self):
+        subprocess.run(['amixer', '-D', 'bluealsa', 'cset', 'numid=6 100%'], capture_output=True)
+        subprocess.run(['amixer', '-D', 'bluealsa', 'cset', 'numid=8 100%'], capture_output=True)
         if self.aplay_sco is None:
             self.aplay_sco = Popen([self.bluealsa_aplay_exec, "--profile-sco"],
                                    stdout=PIPE, stderr=PIPE, shell=False)

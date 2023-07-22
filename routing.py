@@ -14,6 +14,7 @@ class audio_route:
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
         self.device_id = "88:9F:6F:22:BE:55"
+        self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'), 'org.ofono.Manager')
         
         self.bus = dbus.SystemBus()
         self.bus.add_signal_receiver(
@@ -22,13 +23,13 @@ class audio_route:
             signal_name='PCMAdded'
         )
         
-    def run():
+    def run(self):
         thread = Thread(target=self.poll, daemon=True)
         thread.start()
         
-    def pol():
+    def poll(self):
         while True:
-            modems = manager.GetModems()  # Update list in case of new modems from newly-paired devices
+            modems = self.manager.GetModems()  # Update list in case of new modems from newly-paired devices
             for modem, modem_props in modems:
                 if "org.ofono.VoiceCallManager" not in modem_props["Interfaces"]:
                     continue

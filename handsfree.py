@@ -3,11 +3,11 @@ import sys
 import dbus
 
 class handsfree:
-    aplay_sco = None
-    aplay_mic = None
-    arec_mic = None
     
     def __init__(self):
+        self.aplay_sco = None
+        self.aplay_mic = None
+        self.arec_mic = None
         self.bluealsa_aplay_exec = "/usr/bin/bluealsa-aplay"
         self.aplay_exec = "/usr/bin/aplay"
         self.arecord_exec = "/usr/bin/arecord"

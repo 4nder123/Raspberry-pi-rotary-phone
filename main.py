@@ -36,11 +36,14 @@ def poll():
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)
     hf = handsfree()
-    ac = input("Action:" )
-    if ac == "1":
-        hf.anwser_calls()
-    elif ac == "2":
-        hf.hangup()
+    thread = Thread(target=poll, daemon=True)
+    thread.start()
+    while True:
+        ac = input("Action:" )
+        if ac == "1":
+            hf.anwser_calls()
+        elif ac == "2":
+            hf.hangup()
     GLib.MainLoop().run()
     
 

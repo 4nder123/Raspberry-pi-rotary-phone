@@ -28,6 +28,7 @@ class audio_route:
         thread.start()
         
     def poll(self):
+        audio_routing_begun = False
         while True:
             modems = self.manager.GetModems()  # Update list in case of new modems from newly-paired devices
             for modem, modem_props in modems:
@@ -52,8 +53,11 @@ class audio_route:
                         }
 
                 calls = currentcalls
-                if len(calls) > 0:
+                if len(calls) > 0 and audio_routing_begun == False:
+                    audio_routing_begun == True
                     self.on_call_start()
+                elif len(calls) < 0:
+                    audio_routing_begun = False
             sleep(1)
     
     def _on_bluealsa_pcm_added(self, path, properties):

@@ -88,6 +88,5 @@ class audio_route:
             self.arec_mic = None
 
         # Pipe Arecord output to Aplay to send over the SCO link
-        self.arec_mic = Popen([self.arecord,"-D","hw:1,0", "-f", "S16_LE", "-c", "1", "-r", "16000", "mic.wav"], stdout=PIPE, stderr=PIPE, shell=False)
-        sleep(0.6)
-        self.aplay_mic = Popen([self.aplay,"-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "mic.wav"], stdout=PIPE, stderr=PIPE, stdin=self.arec_mic.stdout, shell=False)
+        self.arec_mic = Popen([self.arecord,"-D","plughw:1,0", "-t", "raw", "-f", "s16_le", "-c", "1", "-r", "8000","--period-time=10000", "--buffer-time=30000"], stdout=PIPE, shell=False)
+        self.aplay_mic = Popen([self.aplay, "-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=20000", "--buffer-time=60000"], stdout=PIPE, stdin=self.arec_mic.stdout, shell=False)

@@ -7,6 +7,7 @@ import dbus
 
 class audio_route:
     aplay_sco = None
+    arec_sco = None
     aplay_mic = None
     arec_mic = None
     def __init__(self):
@@ -73,8 +74,15 @@ class audio_route:
             print("Nonzero exit code while setting " + type + " volume")
 
     def on_call_start(self):
-        if self.aplay_sco is None:
-            self.aplay_sco = Popen([self.bluealsa_aplay,"--profile-sco"], stdout=PIPE, stderr=PIPE, shell=False)
+        if self.aplay_sco is not None:
+            self.aplay_sco.terminate()
+            self.aplay_sco.wait()
+            self.aplay_sco = None
+            
+        if self.arec_sco is not None:
+            self.arec_sco.terminate()
+            self.arec_sco.wait()
+            self.arec_sco = None
 
         # Terminate aplay and arecord if already running
         if self.aplay_mic is not None:
@@ -86,6 +94,9 @@ class audio_route:
             self.arec_mic.terminate()
             self.arec_mic.wait()
             self.arec_mic = None
+
+        self.arec_sco = Popen([self.arecord,"-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw", "-f", "s16_le", "-c", "1", "-r", "8000","--period-time=20000", "--buffer-time=60000"], stdout=PIPE, shell=False)
+        self.aplay_sco = Popen([self.aplay, "-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000"], stdout=PIPE, stdin=self.arec_sco.stdout, shell=False)
 
         # Pipe Arecord output to Aplay to send over the SCO link
         self.arec_mic = Popen([self.arecord,"-D","plughw:1,0", "-t", "raw", "-f", "s16_le", "-c", "1", "-r", "8000","--period-time=10000", "--buffer-time=30000"], stdout=PIPE, shell=False)

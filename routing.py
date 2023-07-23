@@ -76,22 +76,14 @@ class audio_route:
 
     def on_call_start(self):
         self.arec_sco = Popen([self.arecord,"-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw", "-f", "s16_le", "-c", "1", "-r", "8000","--period-time=20000", "--buffer-time=60000"], stdout=PIPE, shell=False)
-        self.aplay_sco = Popen([self.aplay, "-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000"], stdout=PIPE, stdin=self.arec_sco.stdout, shell=False)
+        self.aplay_sco = Popen([self.aplay, "-D", "plughw:1,0", "-t", "raw","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000"], stdout=PIPE, stdin=self.arec_sco.stdout, shell=False)
 
         # Pipe Arecord output to Aplay to send over the SCO link
         self.arec_mic = Popen([self.arecord,"-D","plughw:1,0", "-t", "raw", "-f", "s16_le", "-c", "1", "-r", "8000","--period-time=10000", "--buffer-time=30000"], stdout=PIPE, shell=False)
         self.aplay_mic = Popen([self.aplay, "-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=20000", "--buffer-time=60000"], stdout=PIPE, stdin=self.arec_mic.stdout, shell=False)
         
     def on_call_end(self):
-        print("end")
-        self.aplay_sco.terminate()
-        self.aplay_sco.wait()
-        
-        self.arec_sco.terminate()
-        self.arec_sco.wait()
-        
-        self.aplay_mic.terminate()
-        self.aplay_mic.wait()
-        
-        self.arec_mic.terminate()
-        self.arec_mic.wait()
+        self.aplay_sco.kill()
+        self.arec_sco.kill()
+        self.aplay_mic.kill
+        self.arec_mic.kill()

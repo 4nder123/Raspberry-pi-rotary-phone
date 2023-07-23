@@ -1,6 +1,7 @@
 # INSTALLATION
 - Install Bluealsa
 ```
+sudo apt install ofono git automake build-essential libtool pkg-config libasound2-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev libsbc-dev
 git clone https://github.com/Arkq/bluez-alsa
 cd bluez-alsa
 autoreconf --install

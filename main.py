@@ -31,7 +31,7 @@ if __name__ == '__main__':
             call_start = True
         else:
             pass
-        if not hook.is_pressed and call_start == False:
+        if not hook.is_pressed and call_start == False and hf.is_calls(bus, manager):
             hf.hangup()
     GLib.MainLoop().run()
     

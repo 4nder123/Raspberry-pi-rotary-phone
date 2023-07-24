@@ -12,7 +12,7 @@ def get_number(nr_tap, dial_switch, hook):
     pressed = True
     add = False
     while hook.is_pressed:
-        if i == 5000:
+        if i == 2000:
             break
         if dial_switch.is_pressed:
             i = 0
@@ -29,7 +29,7 @@ def get_number(nr_tap, dial_switch, hook):
             nrid = nrid + str(nr)
             nr = 0
         i += 1
-        print(nrid)
+    return nrid
 
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)
@@ -46,9 +46,9 @@ if __name__ == '__main__':
         if hook.is_pressed and hf.is_calls() and not call_start:
             hf.anwser_calls()
             call_start = True
-        elif not call_start:
-            get_number(nr_tap, dial_switch, hook)
+        elif hook.is_pressed and not call_start:
             call_start = True
+            hf.dial_number(get_number(nr_tap, dial_switch, hook))
         if not hook.is_pressed and call_start:
             hf.hangup()
     GLib.MainLoop().run()

@@ -12,7 +12,7 @@ def get_number(nr_tap, dial_switch, hook):
     pressed = True
     add = False
     while hook.is_pressed:
-        if i == 2000:
+        if i == 5000:
             break
         if dial_switch.is_pressed:
             i = 0
@@ -49,7 +49,8 @@ if __name__ == '__main__':
         elif hook.is_pressed and not call_start:
             call_start = True
             nr = get_number(nr_tap, dial_switch, hook)
-            hf.dial_number(nr)
+            print(nr)
+            #hf.dial_number(nr)
         if not hook.is_pressed and call_start:
             hf.hangup()
     GLib.MainLoop().run()

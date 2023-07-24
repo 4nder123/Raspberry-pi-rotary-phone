@@ -11,11 +11,12 @@ class audio_route:
     aplay_mic = None
     arec_mic = None
     def __init__(self):
+        Thread.__init__(self)
         self.bluealsa_aplay = "/usr/bin/bluealsa-aplay"
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
         self.device_id = "88:9F:6F:22:BE:55"
-        
+        self.sound_stop = False
         self.bus = dbus.SystemBus()
         self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'), 'org.ofono.Manager')
         self.bus.add_signal_receiver(
@@ -109,9 +110,12 @@ class audio_route:
             self.arec_mic.kill()
             self.arec_mic = None
             
+    def close_dial_sound(self):
+        self.sound_stop = True
     def dial_sound(self, stop_sound):
-        dial = Popen([self.aplay,"-D","plughw:1,0","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000","tone.wav"], stdout=PIPE, shell=False)
-        while True:
-            if stop_sound:
-                dial.kill()
-                break
+        self.dial = Popen([self.aplay,"-D","plughw:1,0","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000","tone.wav"], stdout=PIPE, shell=False)
+        while not self.stop_sound:
+            pass
+        else:
+            self.dial.kill()
+            self.sound_stop = False

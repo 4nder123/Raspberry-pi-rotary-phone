@@ -1,10 +1,18 @@
 from handsfree import handsfree
+from subprocess import Popen, PIPE
 from routing import audio_route
+from threading import Thread
 from gpiozero import Button
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import dbus
+
+def dial_sound(stop_sound):
+    dial = Popen(["/usr/bin/arecord","-D","plughw:1,0","tone.wav"], stdout=PIPE, shell=False)
+    while True:
+        if stop_sound:
+            dial.kill()
 
 def get_number(nr_tap, dial_switch, hook):
     i = 0
@@ -12,8 +20,13 @@ def get_number(nr_tap, dial_switch, hook):
     nrid = ""
     pressed = True
     add = False
+    stop_sound = False
+    t = Thread(target=dial_sound, args = (lambda : stop_sound, ), daemon=True)
+    t.start()
     while hook.is_pressed:
         if i == 300:
+            stop_sound = True
+            t.join()
             return nrid
         if dial_switch.is_pressed:
             i = 0
@@ -33,6 +46,8 @@ def get_number(nr_tap, dial_switch, hook):
         sleep(0.01)
     else:
         nrid = ""
+        stop_sound = True
+        t.join()
         return nrid
 
 if __name__ == '__main__':

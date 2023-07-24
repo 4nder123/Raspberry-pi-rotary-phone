@@ -9,7 +9,7 @@ from gi.repository import GLib
 import dbus
 
 def dial_sound(stop_sound):
-    dial = Popen(["/usr/bin/arecord","-D","plughw:1,0","tone.wav"], stdout=PIPE, shell=False)
+    dial = Popen(["/usr/bin/aplay","-D","plughw:1,0","tone.wav"], stdout=PIPE, shell=False)
     while True:
         if stop_sound:
             dial.kill()

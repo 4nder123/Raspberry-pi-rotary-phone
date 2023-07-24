@@ -50,10 +50,10 @@ if __name__ == '__main__':
         if hook.is_pressed and hf.is_calls() and not call_start:
             hf.anwser_calls()
             call_start = True
-        elif hook.is_pressed and not call_start:
+        elif hook.is_pressed and not call_start and not hf.is_calls():
             call_start = True
             nr = get_number(nr_tap, dial_switch, hook)
-            if nrid != "":
+            if nr != "":
                 hf.dial_number(nr)
             else:
                 call_start = False

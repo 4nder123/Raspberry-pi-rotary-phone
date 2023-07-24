@@ -7,16 +7,26 @@ import dbus
 
 def get_number(nr_tap, dial_switch, hook):
     i = 0
+    nr = 0
+    nrid = ""
     pressed = True
     while hook.is_pressed:
+        if i == 5000:
+            break
         if dial_switch.is_pressed:
+            i = 0
             if not nr_tap.is_pressed and pressed:
                 pressed = False
-                i+=1
+                nr+=1
             elif nr_tap.is_pressed and not pressed:
                 pressed = True  
         else:
-            print(i)
+            if nr == 10:
+                nr = 0
+            nrid = nrid + str(nr)
+            nr = 0
+        i += 1
+        print(nrid)
 
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)

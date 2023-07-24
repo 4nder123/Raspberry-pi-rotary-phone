@@ -6,7 +6,7 @@ class handsfree:
     def __init__(self):
         self.bus = dbus.SystemBus()
         self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'),'org.ofono.Manager')
-        self.modems = manager.GetModems()
+        self.modems = self.manager.GetModems()
         
     def anwser_calls(self):
         for path, properties in self.modems:
@@ -37,7 +37,7 @@ class handsfree:
         vcm = dbus.Interface(self.bus.get_object("org.ofono", self.modems[0][0]), "org.ofono.VoiceCallManager")
         vcm.Dial(number, "default")
         
-    def is_calls():
+    def is_calls(self):
         modems = self.manager.GetModems()  # Update list in case of new modems from newly-paired devices
         for modem, modem_props in modems:
             if "org.ofono.VoiceCallManager" not in modem_props["Interfaces"]:

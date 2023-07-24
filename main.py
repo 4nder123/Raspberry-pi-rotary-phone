@@ -24,14 +24,14 @@ if __name__ == '__main__':
     hook = Button(2)
     nr_tap = Button(3)
     dial_switch = Button(4)
-    call_start = None
+    call_start = False
     while True:
-        if hook.is_pressed and hf.is_calls(bus, manager):
+        if hook.is_pressed and hf.is_calls() and not call_start:
             hf.anwser_calls()
             call_start = True
         else:
-            pass
-        if not hook.is_pressed and call_start == False and hf.is_calls(bus, manager):
+            get_number(nr_tap, dial_switch, hook)
+        if not hook.is_pressed and call_start:
             hf.hangup()
     GLib.MainLoop().run()
     

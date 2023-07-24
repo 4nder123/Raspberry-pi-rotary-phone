@@ -13,8 +13,9 @@ def get_number(nr_tap, dial_switch, hook):
             if not nr_tap.is_pressed and pressed:
                 pressed = False
                 i+=1
+            elif nr_tap.is_pressed and not pressed:
+                pressed = True  
         else:
-            pressed = True
             print(i)
 
 if __name__ == '__main__':

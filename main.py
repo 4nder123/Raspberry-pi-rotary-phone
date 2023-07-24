@@ -8,18 +8,19 @@ from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import dbus
 
-def get_number(nr_tap, dial_switch, hook):
+def get_number(nr_tap, dial_switch, hook, route):
     i = 0
     nr = 0
     nrid = ""
     pressed = True
     add = False
     stop_sound = False
-    t = Thread(target=route.dial_sound, args = (lambda : stop_sound, ), daemon=True)
+    sleep(1)
+    t = Thread(target=route.dial_sound, daemon=True)
     t.start()
     while hook.is_pressed:
         if i == 300:
-            stop_sound = True
+            route.close_dial_sound
             t.join()
             return nrid
         if dial_switch.is_pressed:
@@ -40,7 +41,7 @@ def get_number(nr_tap, dial_switch, hook):
         sleep(0.01)
     else:
         nrid = ""
-        stop_sound = True
+        route.close_dial_sound
         t.join()
         return nrid
 

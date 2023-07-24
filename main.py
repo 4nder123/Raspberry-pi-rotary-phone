@@ -65,8 +65,6 @@ if __name__ == '__main__':
             nr = get_number(nr_tap, dial_switch, hook, route)
             if nr != "":
                 hf.dial_number(nr)
-            else:
-                call_start = False
         if not hook.is_pressed and call_start:
             call_start = False
             hf.hangup()

@@ -112,9 +112,10 @@ class audio_route:
             
     def close_dial_sound(self):
         self.sound_stop = True
-    def dial_sound(self, stop_sound):
+        
+    def dial_sound(self):
         self.dial = Popen([self.aplay,"-D","plughw:1,0","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000","tone.wav"], stdout=PIPE, shell=False)
-        while not self.stop_sound:
+        while not self.sound_stop:
             pass
         else:
             self.dial.kill()

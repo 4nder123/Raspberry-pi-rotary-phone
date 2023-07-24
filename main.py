@@ -48,7 +48,8 @@ if __name__ == '__main__':
             call_start = True
         elif hook.is_pressed and not call_start:
             call_start = True
-            hf.dial_number(get_number(nr_tap, dial_switch, hook))
+            nr = get_number(nr_tap, dial_switch, hook)
+            hf.dial_number(nr)
         if not hook.is_pressed and call_start:
             hf.hangup()
     GLib.MainLoop().run()

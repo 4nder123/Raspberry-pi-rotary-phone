@@ -7,11 +7,14 @@ import dbus
 
 def get_number(nr_tap, dial_switch, hook):
     i = 0
+    pressed = True
     while hook.is_pressed:
         if dial_switch.is_pressed:
-            if not nr_tap.is_pressed:
+            if not nr_tap.is_pressed and pressed:
+                pressed = False
                 i+=1
         else:
+            pressed = True
             print(i)
 
 if __name__ == '__main__':

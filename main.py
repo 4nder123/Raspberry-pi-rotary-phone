@@ -1,6 +1,7 @@
 from handsfree import handsfree
 from routing import audio_route
 from gpiozero import Button
+from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import dbus
@@ -12,7 +13,7 @@ def get_number(nr_tap, dial_switch, hook):
     pressed = True
     add = False
     while hook.is_pressed:
-        if i == 10000:
+        if i == 3000:
             break
         if dial_switch.is_pressed:
             i = 0
@@ -29,6 +30,7 @@ def get_number(nr_tap, dial_switch, hook):
             nrid = nrid + str(nr)
             nr = 0
         i += 1
+        sleep(0.001)
     return nrid
 
 if __name__ == '__main__':

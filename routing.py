@@ -108,3 +108,9 @@ class audio_route:
         if self.arec_mic is not None:
             self.arec_mic.kill()
             self.arec_mic = None
+            
+    def dial_sound(self, stop_sound):
+        dial = Popen([self.aplay,"-D","plughw:1,0","tone.wav"], stdout=PIPE, shell=False)
+        while True:
+            if stop_sound:
+                dial.kill()

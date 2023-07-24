@@ -8,12 +8,6 @@ from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import dbus
 
-def dial_sound(stop_sound):
-    dial = Popen(["/usr/bin/aplay","-D","plughw:1,0","tone.wav"], stdout=PIPE, shell=False)
-    while True:
-        if stop_sound:
-            dial.kill()
-
 def get_number(nr_tap, dial_switch, hook):
     i = 0
     nr = 0
@@ -21,7 +15,7 @@ def get_number(nr_tap, dial_switch, hook):
     pressed = True
     add = False
     stop_sound = False
-    t = Thread(target=dial_sound, args = (lambda : stop_sound, ), daemon=True)
+    t = Thread(target=route.dial_sound, args = (lambda : stop_sound, ), daemon=True)
     t.start()
     while hook.is_pressed:
         if i == 300:
@@ -67,7 +61,7 @@ if __name__ == '__main__':
             call_start = True
         elif hook.is_pressed and not call_start and not hf.is_calls():
             call_start = True
-            nr = get_number(nr_tap, dial_switch, hook)
+            nr = get_number(nr_tap, dial_switch, hook, route)
             if nr != "":
                 hf.dial_number(nr)
             else:

@@ -5,6 +5,7 @@ from threading import Thread
 from gpiozero import Button, Motor
 from time import sleep
 import time
+from subprocess import call
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 
@@ -18,9 +19,13 @@ class rotaryphone:
         self.route = audio_route()
         self.ringer = Thread(target=self.ring, daemon=True)
         self.dial_sound = Thread(target=route.dial_sound, daemon=True)
+        self.bluealsa = "/usr/bin/bluealsa"
         self.call_start = False
         self.dial_pressed = False
-        
+    
+    def start_ofono:
+        call(["sudo", self.bluealsa, "-p", "hfp-ofono"])
+    
     def ring(self):
         while True:
             while self.hf.get_calls_state() == "incoming":
@@ -62,6 +67,7 @@ class rotaryphone:
             return nrid
         
     def run(self):
+        self.start_ofono
         self.route.run()
         self.ringer.start()
         while True:

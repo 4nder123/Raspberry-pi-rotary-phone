@@ -65,7 +65,8 @@ class handsfree:
                 return True
             elif len(calls) == 0:
                 return False
-    def get_calls(self):
+            
+    def get_calls_state(self):
         modems = self.manager.GetModems()  # Update list in case of new modems from newly-paired devices
         for modem, modem_props in modems:
             if "org.ofono.VoiceCallManager" not in modem_props["Interfaces"]:
@@ -74,19 +75,6 @@ class handsfree:
             calls = mgr.GetCalls()
                 # Due to polling we aren't able to catch when calls end up disconnecting, so we just overwrite the list
                 # each time.
-            currentcalls = {}
             for path, properties in calls:
-                state = properties['State']
-                name = properties['Name']
-                line_ident = properties['LineIdentification']
-
-                if state != "disconnected":
-                    currentcalls[line_ident] = {
-                        "path": path,
-                        "state": state,
-                        "name": name,
-                        "modem": modem
-                    }
-
-            calls = currentcalls
-        return calls
+                return properties["State"]
+                

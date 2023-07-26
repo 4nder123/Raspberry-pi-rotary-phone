@@ -10,6 +10,9 @@ mkdir build && cd build
 make
 sudo make install
 ```
+```
+pip install pexpect
+```
 - Uninstall Pulseaudio
 ```
 sudo apt-get remove pulseaudio

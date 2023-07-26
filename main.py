@@ -8,6 +8,16 @@ from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import dbus
 
+def ring():
+    while True:
+        t_end = time.time() + 2
+        while time.time() < t_end:
+            motor.forward()
+            sleep(0.05)
+            motor.backward()
+            sleep(0.05)
+        sleep(5)
+
 def get_number(nr_tap, dial_switch, hook, route):
     i = 0
     nr = 0
@@ -19,7 +29,7 @@ def get_number(nr_tap, dial_switch, hook, route):
     t = Thread(target=route.dial_sound, daemon=True)
     t.start()
     while hook.is_pressed:
-        if i == 300:
+        if i == 300 and nrid != "":
             route.close_dial_sound
             t.join()
             return nrid
@@ -55,8 +65,10 @@ if __name__ == '__main__':
     hook = Button(2)
     nr_tap = Button(3)
     dial_switch = Button(4)
+    motor = Motor(forward=17, backward=27)
     call_start = False
     while True:
+        print(hf.get_calls())
         if hook.is_pressed and hf.is_calls() and not call_start:
             hf.anwser_calls()
             call_start = True

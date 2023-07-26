@@ -3,8 +3,7 @@ from routing import audio_route
 from bluetooth import bluetooth
 from threading import Thread
 from gpiozero import Button, Motor
-from time import sleep
-import time
+from time import sleep, time
 from subprocess import call
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
@@ -18,19 +17,19 @@ class rotaryphone:
         self.hf = handsfree()
         self.route = audio_route()
         self.ringer = Thread(target=self.ring, daemon=True)
-        self.dial_sound = Thread(target=route.dial_sound, daemon=True)
+        self.ofono = Thread(target=self.start_ofono, daemon=True)
         self.bluealsa = "/usr/bin/bluealsa"
         self.call_start = False
         self.dial_pressed = False
     
-    def start_ofono:
+    def start_ofono(self):
         call(["sudo", self.bluealsa, "-p", "hfp-ofono"])
     
     def ring(self):
         while True:
             while self.hf.get_calls_state() == "incoming":
                 t_end = time.time() + 2
-                while time.time() < t_end:
+                while time() < t_end:
                     self.motor.forward()
                     sleep(0.025)
                     self.motor.backward()
@@ -45,8 +44,9 @@ class rotaryphone:
         nrid = ""
         sleep(1)
         t_end = time.time() + 3
-        self.dial_sound.start()
-        while self.hook.is_pressed or time.time() < t_end:
+        dial_sound = Thread(target=self.route.dial_sound, daemon=True)
+        dial_sound.start()
+        while self.hook.is_pressed and time() < t_end:
             if self.dial_switch.is_pressed:
                 t_end = time.time() + 3
                 if not self.nr_tap.is_pressed and self.dial_pressed:
@@ -67,7 +67,7 @@ class rotaryphone:
             return nrid
         
     def run(self):
-        self.start_ofono
+        self.ofono.start()
         self.route.run()
         self.ringer.start()
         while True:

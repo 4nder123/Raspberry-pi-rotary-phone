@@ -4,6 +4,44 @@ class bluetooth:
     def __init__(self):
         self.bus = dbus.SystemBus()
         
+    def get_managed_objects(self):
+        manager = dbus.Interface(self.bus.get_object("org.bluez", "/"),
+                    "org.freedesktop.DBus.ObjectManager")
+        return manager.GetManagedObjects()
+
+    def find_adapter(self, pattern=None):
+        return self.find_adapter_in_objects(self.get_managed_objects(), pattern)
+
+    def find_adapter_in_objects(self, objects, pattern=None):
+        for path, ifaces in objects.items():
+            adapter = ifaces.get('org.bluez.Adapter1')
+            if adapter is None:
+                continue
+            if not pattern or pattern == adapt:
+                obj = self.bus.get_object('org.bluez', path)
+                return dbus.Interface(obj, 'org.bluez.Adapter1')
+        raise Exception("Bluetooth adapter not found")
+
+    def find_device(self, device_address, adapter_pattern=None):
+        return self.find_device_in_objects(self.get_managed_objects(), device_address,
+                                    adapter_pattern)
+
+    def find_device_in_objects(self, objects, device_address, adapter_pattern=None):
+        path_prefix = ""
+        if adapter_pattern:
+            adapter = self.find_adapter_in_objects(objects, adapter_pattern)
+            path_prefix = adapter.object_path
+        for path, ifaces in objects.items():
+            device = ifaces.get('org.bluez.Device1')
+            if device is None:
+                continue
+            if (device["Address"] == device_address and
+                            path.startswith(path_prefix)):
+                obj = self.bus.get_object('org.bluez', path)
+                return dbus.Interface(obj, 'org.bluez.Device1')
+
+        raise Exception("Bluetooth device not found")
+    
     def is_connected(self):
         manager = dbus.Interface(dbus.Interface(self.bus.get_object('org.bluez', '/'),'org.bluez.Device1'), "org.freedesktop.DBus.ObjectManager")
         obj = manager.GetManagedObjects()
@@ -20,20 +58,26 @@ class bluetooth:
             con = obj[path].get('org.bluez.Device1', {}).get('Connected', False)
             if con:
                 return obj[path].get('org.bluez.Device1', {}).get('Address')
-            else:
-                wait_until_connected(self)
+        return None
     
-    def enable_discovarable(self):
-        manager = dbus.Interface(self.bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Propeties")
-        manager.Set('org.bluez.Adapter1', 'Discoverable', True)
+    def discovarable(self, onoff):
+        adapter = dbus.Interface(self.bus.get_object("org.bluez", self.find_adapter().object_path),"org.freedesktop.DBus.Properties")
+        adapter.Set("org.bluez.Adapter1", "Discoverable", onoff)
         
-    def disable_discovarable(self):
-        manager = dbus.Interface(self.bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Propeties")
-        manager.Set('org.bluez.Adapter1', 'Discoverable', False)
+    def connect(self):
+        device = self.find_device('88:9F:6F:22:BE:55')
+        device.Connect()
+    
+    def unpair_all(self):
+        managed_objects = self.get_managed_objects()
+        adapter = self.find_adapter_in_objects(managed_objects,)
+        dev = self.find_device_in_objects(managed_objects,'88:9F:6F:22:BE:55')
+        path = dev.object_path
+        adapter.RemoveDevice(path)
         
     def wait_until_connected(self):
-        self.enable_discovarable()
+        self.discovarable(True)
         while not self.is_connected():
             pass
-        self.disable_discovarable()
+        self.discovarable(False)
         self.get_mac_address()

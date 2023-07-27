@@ -16,7 +16,12 @@ class rotaryphone:
         self.motor = Motor(forward=17, backward=27)
         self.hf = handsfree()
         self.bt = bluetooth()
-        self.route = audio_route(self.bt.get_mac_address())
+        if self.bt.is_connected():
+            address = self.bt.get_mac_address()
+        else:
+            address = self.bt.wait_until_connected()
+        print(address)
+        self.route = audio_route(address)
         self.ringer = Thread(target=self.ring, daemon=True)
         self.ofono = Thread(target=self.start_ofono, daemon=True)
         self.bluealsa = "/usr/bin/bluealsa"
@@ -72,8 +77,8 @@ class rotaryphone:
         self.route.run()
         self.ringer.start()
         while True:
-            if not self.bt.is_connected():
-                wait_until_connected()
+            if not self.bt.is_connected() or self.bt.get_mac_address() != self.route.device_id:
+                self.route.device_id = self.bt.wait_until_connected()
             if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
                 self.hf.anwser_calls()
                 self.call_start = True

@@ -15,7 +15,8 @@ class rotaryphone:
         self.dial_switch = Button(4)
         self.motor = Motor(forward=17, backward=27)
         self.hf = handsfree()
-        self.route = audio_route()
+        self.bt = bluetooth()
+        self.route = audio_route(self.bt.get_mac_address())
         self.ringer = Thread(target=self.ring, daemon=True)
         self.ofono = Thread(target=self.start_ofono, daemon=True)
         self.bluealsa = "/usr/bin/bluealsa"
@@ -28,7 +29,7 @@ class rotaryphone:
     def ring(self):
         while True:
             while self.hf.get_calls_state() == "incoming":
-                t_end = time.time() + 2
+                t_end = time() + 2
                 while time() < t_end:
                     self.motor.forward()
                     sleep(0.025)
@@ -43,12 +44,12 @@ class rotaryphone:
         nr = 0
         nrid = ""
         sleep(1)
-        t_end = time.time() + 3
+        t_end = time() + 3
         dial_sound = Thread(target=self.route.dial_sound, daemon=True)
         dial_sound.start()
-        while self.hook.is_pressed and time() < t_end:
+        while self.hook.is_pressed and time() < t_end or nrid == "":
             if self.dial_switch.is_pressed:
-                t_end = time.time() + 3
+                t_end = time() + 3
                 if not self.nr_tap.is_pressed and self.dial_pressed:
                     self.dial_pressed = False
                     nr+=1
@@ -63,7 +64,7 @@ class rotaryphone:
             if not self.hook.is_pressed:
                 nrid = ""
             self.route.close_dial_sound()
-            self.dial_sound.join()
+            dial_sound.join()
             return nrid
         
     def run(self):
@@ -71,6 +72,8 @@ class rotaryphone:
         self.route.run()
         self.ringer.start()
         while True:
+            if not self.bt.is_connected():
+                wait_until_connected()
             if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
                 self.hf.anwser_calls()
                 self.call_start = True

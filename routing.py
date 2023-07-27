@@ -10,12 +10,12 @@ class audio_route:
     arec_sco = None
     aplay_mic = None
     arec_mic = None
-    def __init__(self):
+    def __init__(self, device_id):
         Thread.__init__(self)
         self.bluealsa_aplay = "/usr/bin/bluealsa-aplay"
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
-        self.device_id = "88:9F:6F:22:BE:55"
+        self.device_id = device_id
         self.sound_stop = False
         self.bus = dbus.SystemBus()
         self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'), 'org.ofono.Manager')

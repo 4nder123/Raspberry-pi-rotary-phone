@@ -17,7 +17,7 @@ class bluetooth:
             adapter = ifaces.get('org.bluez.Adapter1')
             if adapter is None:
                 continue
-            if not pattern or pattern == adapt:
+            if not pattern or pattern == adapter:
                 obj = self.bus.get_object('org.bluez', path)
                 return dbus.Interface(obj, 'org.bluez.Adapter1')
         raise Exception("Bluetooth adapter not found")
@@ -59,10 +59,11 @@ class bluetooth:
             if con:
                 address = obj[path].get('org.bluez.Device1', {}).get('Address')
                 with open("mac_address.txt","a+") as f:
-                    for mac_address in f.readline().split(',')
+                    f.seek(0)
+                    for mac_address in f.read().split(','):
                         if mac_address == address:
                             return address
-                    f.write(address)
+                    f.write(address+",")
                 return address
         return None
     
@@ -72,18 +73,19 @@ class bluetooth:
         
     def connect(self):
         with open("mac_address.txt","a+") as f:
-            line = f.readline()
-            mac_addresses = line.split(",")
+            f.seek(0)
+            mac_addresses = f.readline().split(",")
             for mac_address in mac_addresses:
                 try:
-                    device = self.find_device(mac_address)
-                    device.Connect()
+                    if not self.is_connected():
+                        device = self.find_device(mac_address)
+                        device.Connect()
                 except:
                     pass
     def unpair_all(self):
         with open("mac_address.txt","a+") as f:
-            line = f.readline()
-            mac_addresses = line.split(",")
+            f.seek(0)
+            mac_addresses = f.readline().split(",")
             for mac_address in mac_addresses:
                 managed_objects = self.get_managed_objects()
                 adapter = self.find_adapter_in_objects(managed_objects,)

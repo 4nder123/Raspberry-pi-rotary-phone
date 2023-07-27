@@ -89,9 +89,12 @@ class bluetooth:
             for mac_address in mac_addresses:
                 managed_objects = self.get_managed_objects()
                 adapter = self.find_adapter_in_objects(managed_objects,)
-                dev = self.find_device_in_objects(managed_objects,mac_address)
-                path = dev.object_path
-                adapter.RemoveDevice(path)
+                try:
+                    dev = self.find_device_in_objects(managed_objects,mac_address)
+                    path = dev.object_path
+                    adapter.RemoveDevice(path)
+                except:
+                    pass
         with open("mac_address.txt","w") as f:
             f.write("")
             

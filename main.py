@@ -77,25 +77,24 @@ class rotaryphone:
         self.ringer.start()
         while True:
             if self.bt.get_mac_address() != self.route.device_id:
-                print(self.route.device_id)
                 self.route.change_address(self.bt.get_mac_address())
-            if not self.bt.is_connected():
+            if self.bt.is_connected():
+                if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
+                    self.hf.anwser_calls()
+                    self.call_start = True
+                elif self.hook.is_pressed and not self.call_start and not self.hf.is_calls():
+                    self.call_start = True
+                    nr = self.get_number()
+                    if nr != "" and nr != "0000":
+                        self.hf.dial_number(nr)
+                    elif nr == "0000":
+                        self.bt.unpair_all()
+                if not self.hook.is_pressed and self.call_start:
+                    self.call_start = False
+                    self.hf.hangup()
+            else:
                 address = self.bt.wait_until_connected()
                 self.route.change_address(address)
-            if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
-                self.hf.anwser_calls()
-                self.call_start = True
-            elif self.hook.is_pressed and not self.call_start and not self.hf.is_calls():
-                self.call_start = True
-                nr = self.get_number()
-                if nr != "" and nr != "0000":
-                    self.hf.dial_number(nr)
-                elif nr == "0000":
-                    self.bt.unpair_all()
-            if not self.hook.is_pressed and self.call_start:
-                self.call_start = False
-                self.hf.hangup()
-    
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)
     rp = rotaryphone()

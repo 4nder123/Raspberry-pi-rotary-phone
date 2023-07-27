@@ -57,10 +57,12 @@ class bluetooth:
         for path in obj:
             con = obj[path].get('org.bluez.Device1', {}).get('Connected', False)
             if con:
-                adress = obj[path].get('org.bluez.Device1', {}).get('Address')
-                with open("mac_address.txt","a") as f:
-                    if addres not in f.readline():
-                        f.write(obj[path].get('org.bluez.Device1', {}).get('Address')+',')
+                address = obj[path].get('org.bluez.Device1', {}).get('Address')
+                with open("mac_address.txt","a+") as f:
+                    for mac_address in f.readline().split(',')
+                        if mac_address == address:
+                            return address
+                    f.write(address)
                 return address
         return None
     
@@ -69,17 +71,17 @@ class bluetooth:
         adapter.Set("org.bluez.Adapter1", "Discoverable", onoff)
         
     def connect(self):
-        with open("mac_address.txt","a") as f:
+        with open("mac_address.txt","a+") as f:
             line = f.readline()
             mac_addresses = line.split(",")
             for mac_address in mac_addresses:
                 try:
-                    device = self.find_device('88:9F:6F:22:BE:55')
+                    device = self.find_device(mac_address)
                     device.Connect()
                 except:
                     pass
     def unpair_all(self):
-        with open("mac_address.txt","a") as f:
+        with open("mac_address.txt","a+") as f:
             line = f.readline()
             mac_addresses = line.split(",")
             for mac_address in mac_addresses:

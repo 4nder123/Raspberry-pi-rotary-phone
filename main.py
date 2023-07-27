@@ -89,8 +89,10 @@ class rotaryphone:
             elif self.hook.is_pressed and not self.call_start and not self.hf.is_calls():
                 self.call_start = True
                 nr = self.get_number()
-                if nr != "":
+                if nr != "" and nr != "0000":
                     self.hf.dial_number(nr)
+                elif nr == "0000":
+                    self.bt.unpair_all()
             if not self.hook.is_pressed and self.call_start:
                 self.call_start = False
                 self.hf.hangup()

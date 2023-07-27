@@ -6,10 +6,10 @@ class handsfree:
     def __init__(self):
         self.bus = dbus.SystemBus()
         self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'),'org.ofono.Manager')
-        self.modems = self.manager.GetModems()
         
     def anwser_calls(self):
-        for path, properties in self.modems:
+        modems = self.manager.GetModems()
+        for path, properties in modems:
             print("[ %s ]" % (path))
             if "org.ofono.VoiceCallManager" not in properties["Interfaces"]:
                 continue
@@ -27,14 +27,16 @@ class handsfree:
                 call.Answer()
             
     def hangup(self):
-        modem = self.modems[0][0]
+        modems = self.manager.GetModems()
+        modem = modems[0][0]
         mgr = dbus.Interface(self.bus.get_object('org.ofono', modem),
                                 'org.ofono.VoiceCallManager')
 
         mgr.HangupAll()
         
     def dial_number(self, number):
-        vcm = dbus.Interface(self.bus.get_object("org.ofono", self.modems[0][0]), "org.ofono.VoiceCallManager")
+        modems = self.manager.GetModems()
+        vcm = dbus.Interface(self.bus.get_object("org.ofono", modems[0][0]), "org.ofono.VoiceCallManager")
         vcm.Dial(number, "default")
         
     def is_calls(self):

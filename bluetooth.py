@@ -57,7 +57,11 @@ class bluetooth:
         for path in obj:
             con = obj[path].get('org.bluez.Device1', {}).get('Connected', False)
             if con:
-                return obj[path].get('org.bluez.Device1', {}).get('Address')
+                adress = obj[path].get('org.bluez.Device1', {}).get('Address')
+                with open("mac_address.txt","a") as f:
+                    if addres not in f.readline():
+                        f.write(obj[path].get('org.bluez.Device1', {}).get('Address')+',')
+                return address
         return None
     
     def discovarable(self, onoff):
@@ -65,19 +69,31 @@ class bluetooth:
         adapter.Set("org.bluez.Adapter1", "Discoverable", onoff)
         
     def connect(self):
-        device = self.find_device('88:9F:6F:22:BE:55')
-        device.Connect()
-    
+        with open("mac_address.txt","a") as f:
+            line = f.readline()
+            mac_addresses = line.split(",")
+            for mac_address in mac_addresses:
+                try:
+                    device = self.find_device('88:9F:6F:22:BE:55')
+                    device.Connect()
+                except:
+                    pass
     def unpair_all(self):
-        managed_objects = self.get_managed_objects()
-        adapter = self.find_adapter_in_objects(managed_objects,)
-        dev = self.find_device_in_objects(managed_objects,'88:9F:6F:22:BE:55')
-        path = dev.object_path
-        adapter.RemoveDevice(path)
-        
-    def wait_until_connected(self):
+        with open("mac_address.txt","a") as f:
+            line = f.readline()
+            mac_addresses = line.split(",")
+            for mac_address in mac_addresses:
+                managed_objects = self.get_managed_objects()
+                adapter = self.find_adapter_in_objects(managed_objects,)
+                dev = self.find_device_in_objects(managed_objects,mac_address)
+                path = dev.object_path
+                adapter.RemoveDevice(path)
+        with open("mac_address.txt","w") as f:
+            f.write("")
+            
+        def wait_until_connected(self):
         self.discovarable(True)
         while not self.is_connected():
-            pass
+            self.connect()
         self.discovarable(False)
         self.get_mac_address()

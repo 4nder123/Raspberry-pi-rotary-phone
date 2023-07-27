@@ -77,8 +77,12 @@ class rotaryphone:
         self.route.run()
         self.ringer.start()
         while True:
-            if not self.bt.is_connected() or self.bt.get_mac_address() != self.route.device_id:
-                self.route.device_id = self.bt.wait_until_connected()
+            if self.bt.get_mac_address() != self.route.device_id:
+                print(self.route.device_id)
+                self.route.change_address(self.bt.get_mac_address())
+            if not self.bt.is_connected():
+                address = self.bt.wait_until_connected()
+                self.route.change_address(address)
             if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
                 self.hf.anwser_calls()
                 self.call_start = True

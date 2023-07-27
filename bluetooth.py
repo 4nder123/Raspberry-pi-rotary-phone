@@ -91,7 +91,7 @@ class bluetooth:
         with open("mac_address.txt","w") as f:
             f.write("")
             
-        def wait_until_connected(self):
+    def wait_until_connected(self):
         self.discovarable(True)
         while not self.is_connected():
             self.connect()

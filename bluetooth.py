@@ -1,4 +1,5 @@
 import dbus
+import os
 
 class bluetooth:
     def __init__(self):
@@ -82,25 +83,28 @@ class bluetooth:
                         device.Connect()
                 except:
                     pass
+                
     def unpair_all(self):
-        with open("mac_address.txt","a+") as f:
-            f.seek(0)
-            mac_addresses = f.readline().split(",")
-            for mac_address in mac_addresses:
-                managed_objects = self.get_managed_objects()
-                adapter = self.find_adapter_in_objects(managed_objects,)
-                try:
-                    dev = self.find_device_in_objects(managed_objects,mac_address)
-                    path = dev.object_path
-                    adapter.RemoveDevice(path)
-                except:
-                    pass
-        with open("mac_address.txt","w") as f:
-            f.write("")
+        if os.path.isfile("./mac_address.txt"):
+            with open("mac_address.txt","a+") as f:
+                f.seek(0)
+                mac_addresses = f.readline().split(",")
+                for mac_address in mac_addresses:
+                    managed_objects = self.get_managed_objects()
+                    adapter = self.find_adapter_in_objects(managed_objects,)
+                    try:
+                        dev = self.find_device_in_objects(managed_objects,mac_address)
+                        path = dev.object_path
+                        adapter.RemoveDevice(path)
+                    except:
+                        pass
+            os.remove("mac_address.txt")
             
     def wait_until_connected(self):
         self.discovarable(True)
         while not self.is_connected():
+            print("Trying to connect")
             self.connect()
+            sleep(1)
         self.discovarable(False)
         self.get_mac_address()

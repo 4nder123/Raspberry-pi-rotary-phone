@@ -20,7 +20,6 @@ class rotaryphone:
             address = self.bt.get_mac_address()
         else:
             address = self.bt.wait_until_connected()
-        print(address)
         self.route = audio_route(address)
         self.ringer = Thread(target=self.ring, daemon=True)
         self.ofono = Thread(target=self.start_ofono, daemon=True)

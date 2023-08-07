@@ -108,4 +108,4 @@ class bluetooth:
             self.connect()
             sleep(1)
         self.discovarable(False)
-        self.get_mac_address()
+        return self.get_mac_address()

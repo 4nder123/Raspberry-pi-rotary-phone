@@ -13,8 +13,7 @@ class handsfree:
             print("[ %s ]" % (path))
             if "org.ofono.VoiceCallManager" not in properties["Interfaces"]:
                 continue
-            mgr = dbus.Interface(self.bus.get_object('org.ofono', path),
-                            'org.ofono.VoiceCallManager')
+            mgr = dbus.Interface(self.bus.get_object('org.ofono', path),'org.ofono.VoiceCallManager')
             calls = mgr.GetCalls()
 
             for path, properties in calls:
@@ -28,16 +27,23 @@ class handsfree:
             
     def hangup(self):
         modems = self.manager.GetModems()
-        modem = modems[0][0]
-        mgr = dbus.Interface(self.bus.get_object('org.ofono', modem),
-                                'org.ofono.VoiceCallManager')
-
-        mgr.HangupAll()
+        for path, properties in modems:
+            print("[ %s ]" % (path))
+            if "org.ofono.VoiceCallManager" not in properties["Interfaces"]:
+                continue
+            mgr = dbus.Interface(self.bus.get_object('org.ofono', path),'org.ofono.VoiceCallManager')
+            mgr.HangupAll()
+            break
         
     def dial_number(self, number):
         modems = self.manager.GetModems()
-        vcm = dbus.Interface(self.bus.get_object("org.ofono", modems[0][0]), "org.ofono.VoiceCallManager")
-        vcm.Dial(number, "default")
+        for path, properties in modems:
+            print("[ %s ]" % (path))
+            if "org.ofono.VoiceCallManager" not in properties["Interfaces"]:
+                continue
+            mgr = dbus.Interface(self.bus.get_object('org.ofono', path),'org.ofono.VoiceCallManager')
+            mgr.Dial(number, "default")
+            break
         
     def is_calls(self):
         modems = self.manager.GetModems()  # Update list in case of new modems from newly-paired devices

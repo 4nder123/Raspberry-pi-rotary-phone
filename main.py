@@ -16,11 +16,6 @@ class rotaryphone:
         self.motor = Motor(forward=17, backward=27)
         self.hf = handsfree()
         self.bt = bluetooth()
-        if self.bt.is_connected():
-            address = self.bt.get_mac_address()
-        else:
-            address = self.bt.wait_until_connected()
-        self.route = audio_route(address)
         self.ringer = Thread(target=self.ring, daemon=True)
         self.ofono = Thread(target=self.start_ofono, daemon=True)
         self.bluealsa = "/usr/bin/bluealsa"
@@ -34,10 +29,9 @@ class rotaryphone:
         while True:
             while self.hf.get_calls_state() == "incoming":
                 t_end = time() + 2
+                self.motor.forward()
                 while time() < t_end:
-                    self.motor.forward()
-                    sleep(0.025)
-                    self.motor.backward()
+                    self.motor.reverse()
                     sleep(0.025)
                 sleep(3)
             else:
@@ -51,7 +45,9 @@ class rotaryphone:
         t_end = time() + 3
         dial_sound = Thread(target=self.route.dial_sound, daemon=True)
         dial_sound.start()
-        while self.hook.is_pressed and time() < t_end or nrid == "":
+        while self.hook.is_pressed and time() < t_end:
+            if nrid == "":
+                t_end = time() + 3
             if self.dial_switch.is_pressed:
                 t_end = time() + 3
                 if not self.nr_tap.is_pressed and self.dial_pressed:
@@ -73,28 +69,34 @@ class rotaryphone:
         
     def run(self):
         self.ofono.start()
+        if self.bt.is_connected():
+            address = self.bt.get_mac_address()
+        else:
+            address = self.bt.wait_until_connected()
+        self.route = audio_route(address)
         self.route.run()
         self.ringer.start()
         while True:
-            if self.bt.get_mac_address() != self.route.device_id:
-                self.route.change_address(self.bt.get_mac_address())
-            if self.bt.is_connected():
-                if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
-                    self.hf.anwser_calls()
-                    self.call_start = True
-                elif self.hook.is_pressed and not self.call_start and not self.hf.is_calls():
-                    self.call_start = True
-                    nr = self.get_number()
-                    if nr != "" and nr != "0000":
-                        self.hf.dial_number(nr)
-                    elif nr == "0000":
-                        self.bt.unpair_all()
-                if not self.hook.is_pressed and self.call_start:
-                    self.call_start = False
-                    self.hf.hangup()
-            else:
+            if self.bt.get_mac_address() != self.route.device_id or not self.bt.is_connected():
+                self.call_start = False
                 address = self.bt.wait_until_connected()
                 self.route.change_address(address)
+            if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
+                self.hf.anwser_calls()
+                self.call_start = True
+            elif self.hook.is_pressed and not self.call_start and not self.hf.is_calls():
+                self.call_start = True
+                nr = self.get_number()
+                if nr != "" and nr != "0000":
+                    self.hf.dial_number(nr)
+                elif nr == "0000":
+                    self.bt.unpair_all()
+                else:
+                    self.call_start = False
+            if not self.hook.is_pressed and self.call_start:
+                self.call_start = False
+                self.hf.hangup()
+    
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)
     rp = rotaryphone()

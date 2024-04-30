@@ -1,10 +1,9 @@
 from handsfree import handsfree
 from routing import audio_route
 from bluetooth import bluetooth
-from threading import Thread
 from gpiozero import Button, Motor
 from time import sleep, time
-from subprocess import call
+from signal import pause
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 
@@ -16,86 +15,97 @@ class rotaryphone:
         self.motor = Motor(forward=17, backward=27)
         self.hf = handsfree()
         self.bt = bluetooth()
-        self.ringer = Thread(target=self.ring, daemon=True)
-        self.ofono = Thread(target=self.start_ofono, daemon=True)
-        self.bluealsa = "/usr/bin/bluealsa"
-        self.call_start = False
-        self.dial_pressed = False
-    
-    def start_ofono(self):
-        call(["sudo", self.bluealsa, "-p", "hfp-ofono"])
+        self.route = audio_route()    
+        self.is_call = False
     
     def ring(self):
-        while True:
-            while self.hf.get_calls_state() == "incoming":
-                t_end = time() + 2
-                self.motor.forward()
-                while time() < t_end:
-                    self.motor.reverse()
-                    sleep(0.025)
-                sleep(3)
-            else:
-                self.motor.stop()
-            sleep(1)
+        while self.hf.get_calls_state() == "incoming" and not self.hook.is_pressed:
+            t_end = time() + 2
+            self.motor.forward()
+            while time() < t_end:
+                self.motor.reverse()
+                sleep(0.025)
+            sleep(3)
+        else:
+            self.motor.stop()
 
     def get_number(self):
         nr = 0
         nrid = ""
-        sleep(1)
         t_end = time() + 3
-        dial_sound = Thread(target=self.route.dial_sound, daemon=True)
-        dial_sound.start()
+        dial_pressed = False
+        call_state = self.hf.get_calls_state()
+        self.route.dial_sound()
         while self.hook.is_pressed and time() < t_end:
+            if not dial_pressed and (call_state == "active" or call_state == "dialing"):
+                nrid = ""
+                break
             if nrid == "":
                 t_end = time() + 3
             if self.dial_switch.is_pressed:
                 t_end = time() + 3
-                if not self.nr_tap.is_pressed and self.dial_pressed:
-                    self.dial_pressed = False
+                if not self.nr_tap.is_pressed and dial_pressed:
+                    dial_pressed = False
                     nr+=1
-                elif self.nr_tap.is_pressed and not self.dial_pressed:
-                    self.dial_pressed = True  
+                elif self.nr_tap.is_pressed and not dial_pressed:
+                    dial_pressed = True 
             elif nr != 0:
                 if nr == 10:
                     nr = 0
-                nrid = nrid + str(nr)
+                nrid += str(nr)
                 nr = 0
+            call_state = self.hf.get_calls_state()    
         else:
             if not self.hook.is_pressed:
                 nrid = ""
-            self.route.close_dial_sound()
-            dial_sound.join()
-            return nrid
+        self.route.close_dial_sound()
+        return nrid
         
-    def run(self):
-        self.ofono.start()
-        if self.bt.is_connected():
-            address = self.bt.get_mac_address()
-        else:
-            address = self.bt.wait_until_connected()
-        self.route = audio_route(address)
-        self.route.run()
-        self.ringer.start()
-        while True:
-            if self.bt.get_mac_address() != self.route.device_id or not self.bt.is_connected():
-                self.call_start = False
-                address = self.bt.wait_until_connected()
-                self.route.change_address(address)
-            if self.hook.is_pressed and self.hf.is_calls() and not self.call_start:
-                self.hf.anwser_calls()
-                self.call_start = True
-            elif self.hook.is_pressed and not self.call_start and not self.hf.is_calls():
-                self.call_start = True
-                nr = self.get_number()
-                if nr != "" and nr != "0000":
-                    self.hf.dial_number(nr)
-                elif nr == "0000":
-                    self.bt.unpair_all()
+    def idle(self):
+        while not self.hook.is_pressed:
+            if self.bt.get_mac_address() != self.route.device_id:
+                if self.bt.is_connected:
+                    self.bt.discovarable(False)
+                    self.route.device_id = self.bt.get_mac_address()
                 else:
-                    self.call_start = False
-            if not self.hook.is_pressed and self.call_start:
-                self.call_start = False
+                    self.bt.discovarable(True)
+                    self.bt.try_autoconnect()
+                    continue
+            if self.is_call == True:
+                self.route.clear_sound()
                 self.hf.hangup()
+                self.is_call = False
+            if self.hf.get_calls_state() == "incoming":
+                self.ring()
+            sleep(1)
+    
+    def phone_up(self):
+        if(self.hf.get_calls_state() == "incoming"):
+            self.is_call = True
+            self.hf.anwser_calls()
+            self.route.on_call_start()
+        elif (self.hf.get_calls_state() == "active" or self.hf.get_calls_state() == "dialing"):
+            self.is_call = True
+            self.route.on_call_start()
+        else:
+            nr = self.get_number()
+            if nr == "0000":
+                self.bt.unpair_all()
+            elif nr == "":
+                self.is_call = True
+                self.route.on_call_start()
+            else:
+                self.hf.dial_number(nr)
+                self.is_call = True
+                self.route.on_call_start()
+            
+
+    def run(self):
+        self.hook.when_released = self.idle
+        self.hook.when_pressed = self.phone_up 
+        self.idle()
+        pause()
+       
     
 if __name__ == '__main__':
     DBusGMainLoop(set_as_default=True)

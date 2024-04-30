@@ -73,15 +73,18 @@ class bluetooth:
         adapter = dbus.Interface(self.bus.get_object("org.bluez", self.find_adapter().object_path),"org.freedesktop.DBus.Properties")
         adapter.Set("org.bluez.Adapter1", "Discoverable", onoff)
         
-    def connect(self):
+    def try_autoconnect(self):
         with open("mac_address.txt","a+") as f:
             f.seek(0)
             mac_addresses = f.readline().split(",")
             for mac_address in mac_addresses:
+                print("trying connect")
                 try:
                     if not self.is_connected():
                         device = self.find_device(mac_address)
                         device.Connect()
+                    else:
+                        break
                 except:
                     pass
                 
@@ -100,12 +103,3 @@ class bluetooth:
                     except:
                         pass
             os.remove("mac_address.txt")
-            
-    def wait_until_connected(self):
-        self.discovarable(True)
-        while not self.is_connected():
-            print("Trying to connect")
-            self.connect()
-            sleep(1)
-        self.discovarable(False)
-        return self.get_mac_address()

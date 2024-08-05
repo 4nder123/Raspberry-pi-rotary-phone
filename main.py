@@ -1,75 +1,70 @@
 from handsfree import handsfree
 from routing import audio_route
-from bluetooth import bluetooth
-from gpiozero import Button, Motor
+from threading import Thread
+from dial import Dial
+from gpiozero import Motor
+import RPi.GPIO as GPIO
 from time import sleep, time
 from signal import pause
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
+import BluetoothController.bluezutils as bt
 
 class rotaryphone:
-    def __init__(self):
-        self.hook = Button(2)
-        self.nr_tap = Button(3)
-        self.dial_switch = Button(4)
+    def __init__(self, hook, nr_tap, dial_switch):
+        self.hook = hook
+        self.nr_tap = nr_tap
+        self.dial_switch = dial_switch
+        GPIO.setup(hook, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(nr_tap, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(dial_switch , GPIO.IN, pull_up_down=GPIO.PUD_UP)
         self.motor = Motor(forward=17, backward=27)
         self.hf = handsfree()
-        self.bt = bluetooth()
         self.route = audio_route()    
+        self.dial = Dial(self.nr_tap, self.dial_switch)
         self.is_call = False
+        self.IsPhoneUp = GPIO.input(self.hook)
+        
     
     def ring(self):
-        while self.hf.get_calls_state() == "incoming" and not self.hook.is_pressed:
+        while self.hf.get_calls_state() == "incoming" and GPIO.input(self.hook):
             t_end = time() + 2
             self.motor.forward()
-            while time() < t_end:
+            while time() < t_end and GPIO.input(self.hook):
                 self.motor.reverse()
                 sleep(0.025)
-            sleep(3)
+            else:
+                t_end = time() + 3
+                while GPIO.input(self.hook) and time() < t_end:
+                    continue
         else:
             self.motor.stop()
 
     def get_number(self):
-        nr = 0
-        nrid = ""
+        self.dial.start()
         t_end = time() + 3
-        dial_pressed = False
-        call_state = self.hf.get_calls_state()
-        self.route.dial_sound()
-        while self.hook.is_pressed and time() < t_end:
-            if not dial_pressed and (call_state == "active" or call_state == "dialing"):
-                nrid = ""
+        while not GPIO.input(self.hook) and time() < t_end:
+            if self.hf.get_calls_state() in ("active", "dialing"):
                 break
-            if nrid == "":
-                t_end = time() + 3
-            if self.dial_switch.is_pressed:
-                t_end = time() + 3
-                if not self.nr_tap.is_pressed and dial_pressed:
-                    dial_pressed = False
-                    nr+=1
-                elif self.nr_tap.is_pressed and not dial_pressed:
-                    dial_pressed = True 
-            elif nr != 0:
-                if nr == 10:
-                    nr = 0
-                nrid += str(nr)
-                nr = 0
-            call_state = self.hf.get_calls_state()    
+            if self.dial.getnumber() == "" or self.dial.isCounting():
+                t_end = time() + 3 
         else:
-            if not self.hook.is_pressed:
-                nrid = ""
-        self.route.close_dial_sound()
-        return nrid
+            self.dial.stop()
+            if GPIO.input(self.hook):
+                return ""
+            else:
+                return self.dial.getnumber()
+        self.dial.stop()
+        return ""
         
     def idle(self):
-        while not self.hook.is_pressed:
-            if self.bt.get_mac_address() != self.route.device_id:
-                if self.bt.is_connected:
-                    self.bt.discovarable(False)
-                    self.route.device_id = self.bt.get_mac_address()
+        while GPIO.input(self.hook):
+            if bt.get_mac_address() != self.route.device_id:
+                if bt.is_connected():
+                    self.route.device_id = bt.get_mac_address()
                 else:
-                    self.bt.discovarable(True)
-                    self.bt.try_autoconnect()
+                    bt.try_autoconnect()
+                    sleep(10)
                     continue
             if self.is_call == True:
                 self.route.clear_sound()
@@ -77,7 +72,8 @@ class rotaryphone:
                 self.is_call = False
             if self.hf.get_calls_state() == "incoming":
                 self.ring()
-            sleep(1)
+            else:
+                sleep(1)
     
     def phone_up(self):
         if(self.hf.get_calls_state() == "incoming"):
@@ -90,27 +86,39 @@ class rotaryphone:
         else:
             nr = self.get_number()
             if nr == "0000":
-                self.bt.unpair_all()
+                bt.unpair_all()
+            if nr == "1111":
+                bt.discovarable(True)
             elif nr == "":
-                self.is_call = True
-                self.route.on_call_start()
+                if self.hf.get_calls_state() in ("active", "dialing"):
+                    self.is_call = True
+                    self.route.on_call_start()
             else:
                 self.hf.dial_number(nr)
                 self.is_call = True
                 self.route.on_call_start()
+
+    def hook_event(self, channel):
+        if not GPIO.input(self.hook) and not self.IsPhoneUp:
+            self.IsPhoneUp = True
+            self.phone_up()
+        elif GPIO.input(self.hook) and self.IsPhoneUp:
+            self.IsPhoneUp = False
+            self.idle()
             
 
-    def run(self):
-        self.hook.when_released = self.idle
-        self.hook.when_pressed = self.phone_up 
-        self.idle()
-        pause()
+    def start(self):
+        GPIO.add_event_detect(self.hook, GPIO.BOTH, callback=self.hook_event)
+        GPIO.add_event_detect(self.nr_tap, GPIO.BOTH, callback=self.dial.addpulse)
+        GPIO.add_event_detect(self.dial_switch, GPIO.BOTH, callback=self.dial.counter_change_status)
+        self.hook_event(0)
        
     
 if __name__ == '__main__':
+    GPIO.setmode(GPIO.BCM)
     DBusGMainLoop(set_as_default=True)
-    rp = rotaryphone()
-    rp.run()
+    rp = rotaryphone(2, 3, 4)
+    rp.start()
     GLib.MainLoop().run()
     
 

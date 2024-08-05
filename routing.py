@@ -11,13 +11,10 @@ class audio_route:
     aplay_mic = None
     arec_mic = None
     def __init__(self):
-        self.bluealsa_aplay = "/usr/bin/bluealsa-aplay"
         self.aplay = "/usr/bin/aplay"
         self.arecord = "/usr/bin/arecord"
         self.device_id = ""
-        self.sound_stop = False
         self.bus = dbus.SystemBus()
-        self.manager = dbus.Interface(self.bus.get_object('org.ofono', '/'), 'org.ofono.Manager')
         self.bus.add_signal_receiver(
             self._on_bluealsa_pcm_added,
             bus_name='org.bluealsa',
@@ -28,7 +25,6 @@ class audio_route:
         self.set_volumes()
 
     def set_volumes(self):
-        # Set the SCO volumes
         self._set_bluealsa_volume("SCO playback", 6, "100")
         self._set_bluealsa_volume("SCO capture", 8, "100")
         
@@ -38,6 +34,7 @@ class audio_route:
 
     def on_call_start(self):
         if self.device_id != "":
+            self.clear_sound()
             self.arec_sco = Popen([self.arecord,"-D", "bluealsa:SRV=org.bluealsa,DEV="+self.device_id+",PROFILE=sco", "-t", "raw", "-f", "s16_le", "-c", "1", "-r", "8000","--period-time=20000", "--buffer-time=60000"], stdout=PIPE, stderr=PIPE, shell=False)
             self.aplay_sco = Popen([self.aplay, "-D", "plughw:1,0", "-t", "raw","-f", "s16_le", "-c", "1", "-r", "8000", "--period-time=10000", "--buffer-time=30000"], stdout=PIPE, stdin=self.arec_sco.stdout, stderr=PIPE, shell=False)
             # Pipe Arecord output to Aplay to send over the SCO link

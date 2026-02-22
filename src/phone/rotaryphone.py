@@ -48,6 +48,7 @@ class RotaryPhone:
     def on_bt_disconnected(self):
         print("Bluetooth disconnected")
         self.route.handle_bt_disconnected()
+        self.hf.bt_disconnected()
 
     def ring(self):
         if self.hf.get_calls_state() != "incoming" or not GPIO.input(HOOK_PIN):

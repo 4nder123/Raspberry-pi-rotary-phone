@@ -10,6 +10,11 @@ class HandsFree:
     def bt_connected(self):
         self._try_setup_modem()
 
+    def bt_disconnected(self):
+        self.call_state = ""
+        self.mgr = None
+        self.bus = None
+
     def _try_setup_modem(self, retries=10):
         try:
             self._setup_modem()
